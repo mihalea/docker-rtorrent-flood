@@ -4,7 +4,6 @@ encoding_list = UTF-8
 port_range = 49184-49184
 port_random = no
 check_hash = no
-directory = /data/torrents
 session = /data/.session
 encryption = allow_incoming, try_outgoing, enable_retry
 trackers.use_udp.set = yes
@@ -17,10 +16,25 @@ min_peers_seed = 1
 max_peers_seed = 50
 max_uploads = 15
 
+# Preallocate files; reduces defragmentation on filesystems.
+system.file_allocate.set = yes
+
+# Encoding
+encoding_list = UTF-8
+
+schedule = mkincomplete,0,0,"execute=mkdir,-p,/data/incomplete"
+directory=/data/incomplete
+
+schedule = mkdone,0,0,"execute=mkdir,-p,/data/done"
+system.method.set_key = event.download.finished,move_complete,"d.set_directory=/data/done/;execute=mv,-u,$d.get_base_path=,/data/done/"
+
+# Periodically save session data
+schedule = session_save,240,300,session_save=
+
 network.xmlrpc.size_limit.set = 10000000
 
 schedule = watch_directory,1,1,"load.start=/data/.watch/*.torrent"
-schedule = untied_directory,5,5,"stop_untied=/data/.watch/*.torrent"
+#schedule = untied_directory,5,5,"stop_untied=/data/.watch/*.torrent"
 schedule = scgi_permission,0,0,"execute.nothrow=chmod,\"g+w,o=\",/tmp/rtorrent.sock"
 schedule = insufficient_disk_space,1,30,close_low_diskspace=500M
 
